@@ -1,0 +1,3 @@
+configure-splash                  /usr/bin
+default-hook.sh                   /usr/share/rpi-splash-screen-support
+debian/configure-splash.8         usr/share/man/man8

@@ -1,0 +1,17 @@
+Source: rpi-splash-screen-support
+Section: admin
+Priority: optional
+Maintainer: Ben Benson <ben.benson@raspberrypi.com>
+Build-Depends: debhelper (>= 13)
+Standards-Version: 3.9.5
+Homepage: https://www.raspberrypi.com/software
+
+Package: rpi-splash-screen-support
+Architecture: all
+Depends: ${misc:Depends}, ${shlibs:Depends}, sed (>= 4.9), bash (>= 5.2)
+Recommends:
+Description: Raspberry Pi Splash Screen Support
+ Tool to configure & setup the fullscreen splash screen for Raspberry Pi OS
+ This package provides hooks and utilities to set up a boot-time splash
+ screen on Raspberry Pi OS. It installs helper scripts and a default hook
+ for integrating with system boot.
