@@ -104,6 +104,7 @@ if [ $DO_CMDLINE_UPDATE -eq 1 ]; then
 
     sed -i "s/ console=tty1//" /boot/firmware/cmdline.txt
     sed -i "s/ plymouth.ignore-serial-consoles//" /boot/firmware/cmdline.txt
+    sed -i "s/ quiet//" /boot/firmware/cmdline.txt
 
     PARAMS=("fullscreen_logo=1" "fullscreen_logo_name=logo.tga" "vt.global_cursor_default=0")
     CMDLINE="$(tr -d '\n' < "/boot/firmware/cmdline.txt")"
