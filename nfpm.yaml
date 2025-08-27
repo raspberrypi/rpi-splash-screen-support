@@ -1,31 +1,23 @@
-# This is an example nfpm configuration file.
-# Make sure to check the documentation at https://nfpm.goreleaser.com
-#
-# The lines below are called `modelines`. See `:help modeline`
-# Feel free to remove those if you don't want/need to use them.
-# yaml-language-server: $schema=https://nfpm.goreleaser.com/static/schema.json
-# vim: set ts=2 sw=2 tw=0 fo=cnqoj
-
-name: "fullscreen-splash"
+name: "splash-screen-configurer"
 arch: "arm64"
 platform: "linux"
 version: "1.0.0"
 section: "default"
 priority: "extra"
-maintainer: "Ben Benson <ben@benbenson.com>"
+maintainer: "Ben Benson <ben.benson@raspberrypi.com>"
 description: |
-  Fullscreen splash screen for Raspberry Pi OS
-vendor: "Ben Benson <ben@benbenson.com>"
-homepage: "https://github.com/benbenson/fullscreen-splash"
+  Tool to configure the fullscreen splash screen for Raspberry Pi OS
+vendor: "Ben Benson <ben.benson@raspberrypi.com>"
+homepage: "https://github.com/bebon901/configure-splash"
 license: "MIT"
 contents:
-  - dst: /usr/share/fullscreen-splash
+  - dst: /usr/share/splash-screen-configurer
     type: dir
     file_info:
       mode: 0755
   - src: ./configure-splash.sh
     dst: /usr/bin/configure-splash
   - src: ./default-hook.sh
-    dst: /usr/share/fullscreen-splash/default-hook.sh
+    dst: /usr/share/splash-screen-configurer/default-hook.sh
     file_info:
       mode: 0755

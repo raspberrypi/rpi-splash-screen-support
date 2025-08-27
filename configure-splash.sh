@@ -78,7 +78,7 @@ echo "Copying image to /lib/firmware/logo.tga"
 cp $CURRENT_DIR/$IMAGE_PATH /lib/firmware/logo.tga
 
 echo "Adding hook to /etc/initramfs-tools/hooks/"
-cp /usr/share/fullscreen-splash/default-hook.sh /etc/initramfs-tools/hooks/splash-screen-hook.sh
+cp /usr/share/splash-screen-configurer/default-hook.sh /etc/initramfs-tools/hooks/splash-screen-hook.sh
 sed -i "s|<splash-image-path>|logo.tga|" /etc/initramfs-tools/hooks/splash-screen-hook.sh
 
 echo "updating initramfs"
