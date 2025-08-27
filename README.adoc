@@ -16,7 +16,7 @@ Upon operation, the only thing that should be drawn to the display will be the s
 An example command to generate an image from a PNG file, to meet the requirements is given below.
 
 ```bash
-convert logo.png -colors 224 -depth 8 -type TrueColor -alpha off -compress none -define tga:bits-per-sample=8 logo.tga
+convert logo.png -flip -colors 224 -depth 8 -type TrueColor -alpha off -compress none -define tga:bits-per-sample=8 logo.tga
 ```
 
 == Installation
