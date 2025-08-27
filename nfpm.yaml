@@ -1,4 +1,4 @@
-name: "splash-screen-configurer"
+name: "rpi-splash-screen-support"
 arch: "arm64"
 platform: "linux"
 version: "1.0.0"
@@ -6,18 +6,17 @@ section: "default"
 priority: "extra"
 maintainer: "Ben Benson <ben.benson@raspberrypi.com>"
 description: |
-  Tool to configure the fullscreen splash screen for Raspberry Pi OS
-vendor: "Ben Benson <ben.benson@raspberrypi.com>"
-homepage: "https://github.com/bebon901/configure-splash"
-license: "MIT"
+  Tool to configure & setup the fullscreen splash screen for Raspberry Pi OS
+homepage: https://www.raspberrypi.com/software
+vendor: Raspberry Pi Ltd
 contents:
-  - dst: /usr/share/splash-screen-configurer
+  - dst: /usr/share/rpi-splash-screen-support
     type: dir
     file_info:
       mode: 0755
   - src: ./configure-splash.sh
     dst: /usr/bin/configure-splash
   - src: ./default-hook.sh
-    dst: /usr/share/splash-screen-configurer/default-hook.sh
+    dst: /usr/share/rpi-splash-screen-support/default-hook.sh
     file_info:
       mode: 0755

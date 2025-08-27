@@ -2,31 +2,39 @@
 
 set -e
 
-# Constants
-MAX_WIDTH=1000
-MAX_HEIGHT=1000
+MAX_WIDTH=1920
+MAX_HEIGHT=1080
 REQUIRED_DEPTH=24
 CURRENT_DIR=$(pwd)
+DO_IMAGE_CHECKS=1
+DO_CMDLINE_UPDATE=1
 
 # Parse command line arguments
 usage() {
     echo "Usage: $0 <splash-image> [options]"
+    echo "Use this tool to set up fullscreen splash screen on Raspberry Pi OS"
+    echo "The splash image must be a 24-bit TGA file, smaller than 1920x1080px"
+    echo "The image must also have less than 224 colors"
+    echo "This tool will alter cmdline.txt and initramfs to enable the splash screen"
     echo "Options:"
-    echo "  --version=VERSION    Qt version to build (default: $QT_VERSION)"
-    echo "  -h, --help           Show this help message"
+    echo "  -h, --help              Show this help message"
+    echo "  --skip-image-checks   Ignore image checks and continue anyway"
+    echo "  --no-cmdline          Do not alter cmdline.txt"
     exit 1
 }
 
 if [ $# -eq 0 ]; then
     echo "Error: No splash image provided"
     usage
-    exit 1
 fi
 
 for arg in "$@"; do
     case $arg in
-        --version=*)
-            QT_VERSION="${arg#*=}"
+        --skip-image-checks)
+            DO_IMAGE_CHECKS=0
+            ;;
+        --no-cmdline)
+            DO_CMDLINE_UPDATE=0
             ;;
         -h|--help)
             usage
@@ -34,13 +42,14 @@ for arg in "$@"; do
     esac
 done
 
-IMAGE_PATH=$1
+IMAGE_PATH="$1"
 
-if [ ! -f "$CURRENT_DIR/$IMAGE_PATH" ]; then
+if ! IMAGE_PATH=$(realpath -e "$IMAGE_PATH" 2>/dev/null); then
     echo "Error: Splash image file not found"
     exit 1
 fi
-IMAGE_INFO=$(file "$CURRENT_DIR/$IMAGE_PATH")
+
+IMAGE_INFO=$(file "$IMAGE_PATH")
 
 # Check if the image is a valid TGA file
 if ! echo "$IMAGE_INFO" | grep -q "Targa image"; then
@@ -48,52 +57,77 @@ if ! echo "$IMAGE_INFO" | grep -q "Targa image"; then
     exit 1
 fi
 
-# Make sure image dimensions not too large
-regex="([0-9]+) x ([0-9]+) x ([0-9]+)"
+if [ $DO_IMAGE_CHECKS -eq 1 ]; then
+    echo "Checking image is valid"
+    # Make sure image dimensions not too large
+    regex="([0-9]+) x ([0-9]+) x ([0-9]+)"
 
-# Perform the regex match
-if [[ $IMAGE_INFO =~ $regex ]]; then
-    # Assign the captured groups to variables
-    width=${BASH_REMATCH[1]}
-    height=${BASH_REMATCH[2]}
-    depth=${BASH_REMATCH[3]}
-    if [ $depth -ne $REQUIRED_DEPTH ]; then
-    echo "Error: Splash image must be $REQUIRED_DEPTH-bit, provided image is $depth bit"
-    exit 1
-    fi
-    if [ $width -gt $MAX_WIDTH ] || [ $height -gt $MAX_HEIGHT ]; then
-        echo "Splash image must be less than $MAX_WIDTH x $MAX_HEIGHT px"
-        echo "Provided image is $width x $height"
+    # Perform the regex match
+    if [[ $IMAGE_INFO =~ $regex ]]; then
+        # Assign the captured groups to variables
+        width=${BASH_REMATCH[1]}
+        height=${BASH_REMATCH[2]}
+        depth=${BASH_REMATCH[3]}
+        if [ $depth -ne $REQUIRED_DEPTH ]; then
+        echo "Error: Splash image must be $REQUIRED_DEPTH-bit, provided image is $depth bit"
         exit 1
+        fi
+        if [ $width -gt $MAX_WIDTH ] || [ $height -gt $MAX_HEIGHT ]; then
+            echo "Splash image must be less than $MAX_WIDTH x $MAX_HEIGHT px"
+            echo "Provided image is $width x $height"
+            exit 1
+        fi
+    else
+        echo "Could not determine image properties"
+        echo "Warning: Continuing anyway, please check image is correct format:"
+        echo "Image format must be TGA, 24-bit, dimensions < 1000x1000px"
     fi
 else
-    echo "Could not determine image properties"
-    echo "Warning: Continuing anyway, please check image is correct format:"
-    echo "Image format must be TGA, 24-bit, dimensions < 1000x1000px"
+    echo "Warning: skipping image checks"
 fi
 
-# Passed checks
 # Add correct hook to /etc/initramfs-tools/hooks/
 echo "Copying image to /lib/firmware/logo.tga"
-cp $CURRENT_DIR/$IMAGE_PATH /lib/firmware/logo.tga
+cp "$IMAGE_PATH" /lib/firmware/logo.tga
 
 echo "Adding hook to /etc/initramfs-tools/hooks/"
-cp /usr/share/splash-screen-configurer/default-hook.sh /etc/initramfs-tools/hooks/splash-screen-hook.sh
+cp /usr/share/rpi-splash-screen-support/default-hook.sh /etc/initramfs-tools/hooks/splash-screen-hook.sh
 sed -i "s|<splash-image-path>|logo.tga|" /etc/initramfs-tools/hooks/splash-screen-hook.sh
 
-echo "updating initramfs"
+echo "Updating initramfs"
 update-initramfs -k all -u
 
-# Update cmdline.txt to enable splash screen
-if grep -q "fullscreen_logo" /boot/firmware/cmdline.txt; then
-    echo "cmdline.txt already contains entry for fullscreen_logo"
-    echo "You must update cmdline.txt manually to enable splash screen"
-    echo "Add the following line to cmdline.txt:"
-    echo " fullscreen_logo_path=logo.tga"
-    echo " fullscreen_logo=1"
+if [ $DO_CMDLINE_UPDATE -eq 1 ]; then
+    # Update cmdline.txt to enable splash screen
+    # Remove entries that will conflict with fullscreen splash
+    echo "Altering cmdline.txt to enable splash screen"
+
+    sed -i "s/ console=tty1//" /boot/firmware/cmdline.txt
+    sed -i "s/ plymouth.ignore-serial-consoles//" /boot/firmware/cmdline.txt
+
+    PARAMS=("fullscreen_logo=1" "fullscreen_logo_name=logo.tga" "vt.global_cursor_default=0")
+    CMDLINE="$(tr -d '\n' < "/boot/firmware/cmdline.txt")"
+
+    # Remove any existing versions of our params (with any value)
+    for key in fullscreen_logo fullscreen_logo_name vt.global_cursor_default; do
+        CMDLINE="$(echo "$CMDLINE" | sed -E "s/\b${key}=[^ ]*//g")"
+    done
+
+    CMDLINE="$(echo "$CMDLINE" | tr -s ' ')"
+    CMDLINE="$(echo "$CMDLINE" | sed -E 's/^ +| +$//g')"
+
+    # Append the correct parameters
+    for p in "${PARAMS[@]}"; do
+        CMDLINE="$CMDLINE $p"
+    done
+
+    # Ensure it's still a single line
+    echo "$CMDLINE" | tr -d '\n' | tee "/boot/firmware/cmdline.txt" > /dev/null
+    echo "Updated /boot/firmware/cmdline.txt"
 else
-    echo "cmdline.txt does not contain entry for fullscreen_logo"
-    echo "Adding entry to cmdline.txt"
-    sed -i 's/$/ fullscreen_logo=1 fullscreen_logo_name=logo.tga vt.global_cursor_default=0/' /boot/firmware/cmdline.txt
-    sed -i "s/console=tty1//" /boot/firmware/cmdline.txt
+    echo "Not updating cmdline.txt"
+    echo "To enable the splash screen, you must manually add the following lines to cmdline.txt:"
+    echo "fullscreen_logo=1"
+    echo "fullscreen_logo_name=logo.tga"
+    echo "vt.global_cursor_default=0"
 fi
