@@ -36,3 +36,9 @@ sudo configure-splash <splash-image>
 ```
 
 This will provide the necessary changes to the kernel to enable the splash screen.
+
+== Building
+
+```bash
+dpkg-buildpackage -us -uc
+```
