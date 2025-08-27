@@ -1,0 +1,45 @@
+.TH CONFIGURE-SPLASH 8 "August 2025" "rpi-splash-screen-support" "System Manager's Manual"
+.SH NAME
+configure-splash \- configure the fullscreen splash screen for Raspberry Pi OS
+.SH SYNOPSIS
+.B sudo configure-splash
+.I <splash-image>
+.SH DESCRIPTION
+The configure-splash tool configures and sets up a fullscreen splash screen for Raspberry Pi OS. This splash image is drawn early in the boot process, replacing the default four raspberries logo.
+.PP
+This tool will make the necessary changes to the kernel configuration to show a fullscreen splash image at boot time. Upon successful configuration, the only thing drawn to the display during the early boot phase will be the specified splash image, followed by the next application to take control of the display (e.g., the desktop environment, a login console, etc.).
+.PP
+The <splash-image> argument is the path to the image file to be used. This can be either a relative or an absolute path.
+.SH REQUIREMENTS
+The splash image file must meet the following criteria:
+.IP \(bu 2
+Format: 24-bit TGA
+.IP \(bu 2
+Dimensions: Smaller than 1920x1080 pixels  
+.IP \(bu 2
+Colors: Must contain less than 224 colors
+.SH EXAMPLES
+.SS Creating a suitable TGA image
+An image can be converted from a format like PNG to a compliant TGA file using ImageMagick's
+.BR convert (1)
+tool:
+.PP
+.nf
+.RS
+$ convert image.png -flip -colors 224 -depth 8 -type TrueColor -alpha off -compress none -define tga:bits-per-sample=8 logo.tga
+.RE
+.fi
+.SS Setting the splash screen
+To set the newly created `logo.tga` as the splash screen:
+.PP
+.nf
+.RS
+$ sudo configure-splash logo.tga
+.RE
+.fi
+.SH FILES
+Modifies kernel configuration files to enable the splash screen functionality.
+.SH SEE ALSO
+.BR convert (1)
+.SH BUGS
+No known bugs.

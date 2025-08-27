@@ -92,7 +92,7 @@ cp "$IMAGE_PATH" /lib/firmware/logo.tga
 
 echo "Adding hook to /etc/initramfs-tools/hooks/"
 cp /usr/share/rpi-splash-screen-support/default-hook.sh /etc/initramfs-tools/hooks/splash-screen-hook.sh
-sed -i "s|<splash-image-path>|logo.tga|" /etc/initramfs-tools/hooks/splash-screen-hook.sh
+sed -i "s|splash-image-path|logo.tga|" /etc/initramfs-tools/hooks/splash-screen-hook.sh
 
 echo "Updating initramfs"
 update-initramfs -k all -u

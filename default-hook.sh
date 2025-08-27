@@ -15,4 +15,4 @@ esac
 . /usr/share/initramfs-tools/hook-functions
 # Begin real processing below this line
 
-add_firmware <splash-image-path>
+add_firmware splash-image-path
