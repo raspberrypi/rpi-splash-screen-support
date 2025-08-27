@@ -24,8 +24,7 @@ convert logo.png -colors 224 -depth 8 -type TrueColor -alpha off -compress none 
 To install the package, run the following command:
 
 ```bash
-wget https://github.com/bebon901/configure-splash/raw/refs/heads/master/rpi-splash-screen-support_1.0.0_arm64.deb
-sudo dpkg -i rpi-splash-screen-support_1.0.0_arm64.deb
+sudo apt install rpi-splash-screen-support
 ```
 
 == Usage
