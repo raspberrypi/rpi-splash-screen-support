@@ -1,3 +1,10 @@
+rpi-splash-screen-support (1.0.1) stable; urgency=low
+
+  * Corrects more cmdline.txt options
+
+ -- Ben Benson <ben.benson@raspberrypi.com>  Fri, 29 Aug 2025 14:00:00 +0100
+
+
 rpi-splash-screen-support (1.0.0) stable; urgency=low
 
   * Initial Release
