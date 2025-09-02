@@ -5,6 +5,8 @@ set -e
 MAX_WIDTH=1920
 MAX_HEIGHT=1080
 REQUIRED_DEPTH=24
+MAX_COLOURS=224
+DESTINATION_FILENAME=logo.tga
 CURRENT_DIR=$(pwd)
 DO_IMAGE_CHECKS=1
 DO_CMDLINE_UPDATE=1
@@ -13,8 +15,8 @@ DO_CMDLINE_UPDATE=1
 usage() {
     echo "Usage: $0 <splash-image> [options]"
     echo "Use this tool to set up fullscreen splash screen on Raspberry Pi OS"
-    echo "The splash image must be a 24-bit TGA file, smaller than 1920x1080px"
-    echo "The image must also have less than 224 colors"
+    echo "The splash image must be a ${REQUIRED_DEPTH}-bit TGA file, smaller than ${MAX_WIDTH}x${MAX_HEIGHT}px"
+    echo "The image must also have less than ${MAX_COLOURS} colours"
     echo "This tool will alter cmdline.txt and initramfs to enable the splash screen"
     echo "Options:"
     echo "  -h, --help              Show this help message"
@@ -80,19 +82,19 @@ if [ $DO_IMAGE_CHECKS -eq 1 ]; then
     else
         echo "Could not determine image properties"
         echo "Warning: Continuing anyway, please check image is correct format:"
-        echo "Image format must be TGA, 24-bit, dimensions < 1000x1000px"
+        echo "Image format must be TGA, ${REQUIRED_DEPTH}-bit, dimensions < ${MAX_WIDTH}x${MAX_HEIGHT}px"
     fi
 else
     echo "Warning: skipping image checks"
 fi
 
 # Add correct hook to /etc/initramfs-tools/hooks/
-echo "Copying image to /lib/firmware/logo.tga"
-cp "$IMAGE_PATH" /lib/firmware/logo.tga
+echo "Copying image to /lib/firmware/${DESTINATION_FILENAME}"
+cp "$IMAGE_PATH" /lib/firmware/${DESTINATION_FILENAME}
 
 echo "Adding hook to /etc/initramfs-tools/hooks/"
 cp /usr/share/rpi-splash-screen-support/default-hook.sh /etc/initramfs-tools/hooks/splash-screen-hook.sh
-sed -i "s|splash-image-path|logo.tga|" /etc/initramfs-tools/hooks/splash-screen-hook.sh
+sed -i "s|splash-image-path|${DESTINATION_FILENAME}|" /etc/initramfs-tools/hooks/splash-screen-hook.sh
 
 echo "Updating initramfs"
 update-initramfs -k all -u
@@ -106,7 +108,7 @@ if [ $DO_CMDLINE_UPDATE -eq 1 ]; then
     sed -i "s/ plymouth.ignore-serial-consoles//" /boot/firmware/cmdline.txt
     sed -i "s/ quiet//" /boot/firmware/cmdline.txt
 
-    PARAMS=("fullscreen_logo=1" "fullscreen_logo_name=logo.tga" "vt.global_cursor_default=0")
+    PARAMS=("fullscreen_logo=1" "fullscreen_logo_name=${DESTINATION_FILENAME}" "vt.global_cursor_default=0")
     CMDLINE="$(tr -d '\n' < "/boot/firmware/cmdline.txt")"
 
     # Remove any existing versions of our params (with any value)
@@ -127,8 +129,8 @@ if [ $DO_CMDLINE_UPDATE -eq 1 ]; then
     echo "Updated /boot/firmware/cmdline.txt"
 else
     echo "Not updating cmdline.txt"
-    echo "To enable the splash screen, you must manually add the following lines to cmdline.txt:"
+    echo "To enable the splash screen, you must manually add the following entries to cmdline.txt:"
     echo "fullscreen_logo=1"
-    echo "fullscreen_logo_name=logo.tga"
+    echo "fullscreen_logo_name=${DESTINATION_FILENAME}"
     echo "vt.global_cursor_default=0"
 fi
