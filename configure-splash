@@ -7,6 +7,7 @@ MAX_HEIGHT=1080
 REQUIRED_DEPTH=24
 MAX_COLOURS=224
 DESTINATION_FILENAME=logo.tga
+CMDLINE_FILENAME=/boot/firmware/cmdline.txt
 CURRENT_DIR=$(pwd)
 DO_IMAGE_CHECKS=1
 DO_CMDLINE_UPDATE=1
@@ -88,6 +89,12 @@ else
     echo "Warning: skipping image checks"
 fi
 
+# Everything beyond here needs root access
+if [  $(id -u) -ne 0 ]; then
+    echo "Script must be run as root. Try 'sudo $0'"
+    exit 1
+fi
+
 # Add correct hook to /etc/initramfs-tools/hooks/
 echo "Copying image to /lib/firmware/${DESTINATION_FILENAME}"
 cp "$IMAGE_PATH" /lib/firmware/${DESTINATION_FILENAME}
@@ -99,20 +106,22 @@ sed -i "s|splash-image-path|${DESTINATION_FILENAME}|" /etc/initramfs-tools/hooks
 echo "Updating initramfs"
 update-initramfs -k all -u
 
+NEW_PARAMS=("fullscreen_logo=1" "fullscreen_logo_name=${DESTINATION_FILENAME}" "vt.global_cursor_default=0")
+
 if [ $DO_CMDLINE_UPDATE -eq 1 ]; then
     # Update cmdline.txt to enable splash screen
     # Remove entries that will conflict with fullscreen splash
-    echo "Altering cmdline.txt to enable splash screen"
+    echo "Altering $CMDLINE_FILENAME to enable splash screen"
 
-    sed -i "s/ console=tty1//" /boot/firmware/cmdline.txt
-    sed -i "s/ plymouth.ignore-serial-consoles//" /boot/firmware/cmdline.txt
-    sed -i "s/ quiet//" /boot/firmware/cmdline.txt
+    sed -i "s/\bconsole=tty1\b//" $CMDLINE_FILENAME
+    sed -i "s/\bplymouth.ignore-serial-consoles\b//" $CMDLINE_FILENAME
+    sed -i "s/\bquiet\b//" $CMDLINE_FILENAME
 
-    PARAMS=("fullscreen_logo=1" "fullscreen_logo_name=${DESTINATION_FILENAME}" "vt.global_cursor_default=0")
-    CMDLINE="$(tr -d '\n' < "/boot/firmware/cmdline.txt")"
+    CMDLINE="$(tr -d '\n' < $CMDLINE_FILENAME)"
 
     # Remove any existing versions of our params (with any value)
-    for key in fullscreen_logo fullscreen_logo_name vt.global_cursor_default; do
+    for p in "${NEW_PARAMS[@]}"; do
+        key=${p%%=*}
         CMDLINE="$(echo "$CMDLINE" | sed -E "s/\b${key}=[^ ]*//g")"
     done
 
@@ -120,17 +129,17 @@ if [ $DO_CMDLINE_UPDATE -eq 1 ]; then
     CMDLINE="$(echo "$CMDLINE" | sed -E 's/^ +| +$//g')"
 
     # Append the correct parameters
-    for p in "${PARAMS[@]}"; do
+    for p in "${NEW_PARAMS[@]}"; do
         CMDLINE="$CMDLINE $p"
     done
 
     # Ensure it's still a single line
-    echo "$CMDLINE" | tr -d '\n' | tee "/boot/firmware/cmdline.txt" > /dev/null
-    echo "Updated /boot/firmware/cmdline.txt"
+    echo "$CMDLINE" | tr -d '\n' > $CMDLINE_FILENAME
+    echo "Updated $CMDLINE_FILENAME"
 else
-    echo "Not updating cmdline.txt"
-    echo "To enable the splash screen, you must manually add the following entries to cmdline.txt:"
-    echo "fullscreen_logo=1"
-    echo "fullscreen_logo_name=${DESTINATION_FILENAME}"
-    echo "vt.global_cursor_default=0"
+    echo "Not updating $CMDLINE_FILENAME"
+    echo "To enable the splash screen, you must manually add the following entries to $CMDLINE_FILENAME:"
+    for p in "${NEW_PARAMS[@]}"; do
+        echo "$p"
+    done
 fi
