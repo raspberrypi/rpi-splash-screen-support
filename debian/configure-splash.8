@@ -4,12 +4,25 @@ configure-splash \- configure the fullscreen splash screen for Raspberry Pi OS
 .SH SYNOPSIS
 .B sudo configure-splash
 .I <splash-image>
+.RI [ options ]
 .SH DESCRIPTION
 The configure-splash tool configures and sets up a fullscreen splash screen for Raspberry Pi OS. This splash image is drawn early in the boot process, replacing the default four raspberries logo.
 .PP
 This tool will make the necessary changes to the kernel configuration to show a fullscreen splash image at boot time. Upon successful configuration, the only thing drawn to the display during the early boot phase will be the specified splash image, followed by the next application to take control of the display (e.g., the desktop environment, a login console, etc.).
 .PP
-The <splash-image> argument is the path to the image file to be used. This can be either a relative or an absolute path.
+The <splash-image> argument is the path to the image file to be used. This can be either a relative or an absolute path. It must be given as the first argument, before any options.
+.SH OPTIONS
+.TP
+.B \-\-skip\-image\-checks
+Skip validation of the image format, dimensions and colour count, and continue regardless.
+.TP
+.B \-\-no\-cmdline
+Do not modify
+.IR cmdline.txt .
+The kernel parameters that would be added are printed instead, for manual addition.
+.TP
+.BR \-h ", " \-\-help
+Show usage information and exit.
 .SH REQUIREMENTS
 The splash image file must meet the following criteria:
 .IP \(bu 2
@@ -17,7 +30,7 @@ Format: 24-bit TGA
 .IP \(bu 2
 Dimensions: Smaller than 1920x1080 pixels  
 .IP \(bu 2
-Colors: Must contain less than 224 colors
+Colours: Must contain at most 224 colours
 .SH EXAMPLES
 .SS Creating a suitable TGA image
 An image can be converted from a format like PNG to a compliant TGA file using ImageMagick's
@@ -42,4 +55,4 @@ Modifies kernel configuration files to enable the splash screen functionality.
 .SH SEE ALSO
 .BR convert (1)
 .SH BUGS
-No known bugs.
+Please report bugs at https://github.com/raspberrypi/rpi-splash-screen-support

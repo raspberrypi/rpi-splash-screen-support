@@ -9,8 +9,8 @@ Upon operation, the only thing that should be drawn to the display will be the s
 ## Requirements
 
 - A 24-bit TGA image
-- Image dimensions smaller than 1920x1080px
-- Image must contain less than 224 colors
+- Image dimensions of 1920x1080px or smaller
+- Image must contain at most 224 colours
 
 An example command to generate an image from a PNG file, to meet the requirements is given below.
 
@@ -28,7 +28,7 @@ sudo apt install rpi-splash-screen-support
 
 ## Usage
 
-To configure the splash screen, run the following command, replacing <splash-image> with the path of the image file to use. This path can be relative or absolute.
+To configure the splash screen, run the following command, replacing `<splash-image>` with the path of the image file to use. This path can be relative or absolute.
 
 ```bash
 sudo configure-splash <splash-image>
