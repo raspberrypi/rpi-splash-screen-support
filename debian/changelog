@@ -5,6 +5,22 @@ rpi-splash-screen-support (1.0.2) stable; urgency=medium
     which previously glued kernel parameters into one invalid token
   * Back up cmdline.txt to cmdline.txt.bak before modifying
   * Quote the cmdline.txt filename throughout
+  * Add missing runtime dependencies on initramfs-tools and file
+  * Validate the image colour count (fewer than 224) using
+    ImageMagick's identify when available; add imagemagick to Recommends
+  * Write cmdline.txt in a single atomic operation instead of editing it
+    in place
+  * Preserve the original cmdline.txt backup across re-runs rather than
+    overwriting it
+  * Accept the splash image argument before or after options, and reject
+    unknown options
+  * Exit successfully (0) when --help is requested
+  * Modernise packaging: use debhelper-compat (= 13), drop unused
+    ${shlibs:Depends}, relax bash/sed version constraints, and bump
+    Standards-Version to 4.7.0
+  * Update package maintainer
+  * Convert README to Markdown and document all command-line options in
+    the man page
 
  -- Tom Dewey <tom.dewey@raspberrypi.com>  Tue, 02 Jun 2026 16:12:10 +0100
 
