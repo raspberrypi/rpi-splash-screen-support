@@ -1,0 +1,17 @@
+# Debian package build artifacts
+debian/.debhelper/
+debian/rpi-splash-screen-support/
+debian/tmp/
+debian/files
+debian/debhelper-build-stamp
+debian/*.substvars
+debian/*.debhelper.log
+
+# Build outputs (produced by dpkg-buildpackage, normally in the parent dir,
+# but kept here historically)
+*.deb
+*.buildinfo
+*.changes
+*.dsc
+*.tar.gz
+*.tar.xz
