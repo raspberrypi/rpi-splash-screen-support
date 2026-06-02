@@ -1,14 +1,14 @@
 Source: rpi-splash-screen-support
 Section: admin
 Priority: optional
-Maintainer: Ben Benson <ben.benson@raspberrypi.com>
-Build-Depends: debhelper (>= 13)
-Standards-Version: 3.9.5
+Maintainer: Tom Dewey <tom.dewey@raspberrypi.com>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.7.0
 Homepage: https://www.raspberrypi.com/software
 
 Package: rpi-splash-screen-support
 Architecture: all
-Depends: ${misc:Depends}, ${shlibs:Depends}, sed (>= 4.9), bash (>= 5.2)
+Depends: ${misc:Depends}, sed (>= 4.9), bash (>= 5.2)
 Recommends:
 Description: Raspberry Pi Splash Screen Support
  Tool to configure & setup the fullscreen splash screen for Raspberry Pi OS

@@ -1,4 +1,4 @@
-== rpi-splash-screen-support
+# rpi-splash-screen-support
 
 This package provides a tool to configure and setup the fullscreen splash screen for Raspberry Pi OS.
 
@@ -6,12 +6,11 @@ This splash image is drawn early in the boot process. This tool will configure t
 
 Upon operation, the only thing that should be drawn to the display will be the splash image, followed by whatever application overwrites it next (e.g. desktop, login console, etc).
 
-== Requirements
+## Requirements
 
-* A 24-bit TGA image
-* Image dimensions smaller than 1920x1080px
-* Image must contain less than 224 colors
-
+- A 24-bit TGA image
+- Image dimensions smaller than 1920x1080px
+- Image must contain less than 224 colors
 
 An example command to generate an image from a PNG file, to meet the requirements is given below.
 
@@ -19,7 +18,7 @@ An example command to generate an image from a PNG file, to meet the requirement
 convert logo.png -flip -colors 224 -depth 8 -type TrueColor -alpha off -compress none -define tga:bits-per-sample=8 logo.tga
 ```
 
-== Installation
+## Installation
 
 To install the package, run the following command:
 
@@ -27,7 +26,7 @@ To install the package, run the following command:
 sudo apt install rpi-splash-screen-support
 ```
 
-== Usage
+## Usage
 
 To configure the splash screen, run the following command, replacing <splash-image> with the path of the image file to use. This path can be relative or absolute.
 
@@ -37,7 +36,7 @@ sudo configure-splash <splash-image>
 
 This will provide the necessary changes to the kernel to enable the splash screen.
 
-== Building
+## Building
 
 ```bash
 dpkg-buildpackage -us -uc
