@@ -8,7 +8,6 @@ REQUIRED_DEPTH=24
 MAX_COLOURS=224
 DESTINATION_FILENAME=logo.tga
 CMDLINE_FILENAME=/boot/firmware/cmdline.txt
-CURRENT_DIR=$(pwd)
 DO_IMAGE_CHECKS=1
 DO_CMDLINE_UPDATE=1
 
@@ -17,19 +16,16 @@ usage() {
     echo "Usage: $0 <splash-image> [options]"
     echo "Use this tool to set up fullscreen splash screen on Raspberry Pi OS"
     echo "The splash image must be a ${REQUIRED_DEPTH}-bit TGA file, smaller than ${MAX_WIDTH}x${MAX_HEIGHT}px"
-    echo "The image must also have less than ${MAX_COLOURS} colours"
+    echo "The image must also have no more than ${MAX_COLOURS} colours"
     echo "This tool will alter cmdline.txt and initramfs to enable the splash screen"
     echo "Options:"
     echo "  -h, --help              Show this help message"
     echo "  --skip-image-checks   Ignore image checks and continue anyway"
     echo "  --no-cmdline          Do not alter cmdline.txt"
-    exit 1
+    exit "${1:-1}"
 }
 
-if [ $# -eq 0 ]; then
-    echo "Error: No splash image provided"
-    usage
-fi
+IMAGE_PATH=""
 
 for arg in "$@"; do
     case $arg in
@@ -40,28 +36,45 @@ for arg in "$@"; do
             DO_CMDLINE_UPDATE=0
             ;;
         -h|--help)
+            usage 0
+            ;;
+        -*)
+            echo "Error: Unknown option '$arg'"
             usage
+            ;;
+        *)
+            # First non-option argument is the splash image
+            if [ -z "$IMAGE_PATH" ]; then
+                IMAGE_PATH="$arg"
+            else
+                echo "Error: Unexpected extra argument '$arg'"
+                usage
+            fi
             ;;
     esac
 done
 
-IMAGE_PATH="$1"
+if [ -z "$IMAGE_PATH" ]; then
+    echo "Error: No splash image provided"
+    usage
+fi
 
 if ! IMAGE_PATH=$(realpath -e "$IMAGE_PATH" 2>/dev/null); then
     echo "Error: Splash image file not found"
     exit 1
 fi
 
-IMAGE_INFO=$(file "$IMAGE_PATH")
-
-# Check if the image is a valid TGA file
-if ! echo "$IMAGE_INFO" | grep -q "Targa image"; then
-    echo "Error: Splash image is not a valid TGA file"
-    exit 1
-fi
-
 if [ $DO_IMAGE_CHECKS -eq 1 ]; then
     echo "Checking image is valid"
+
+    IMAGE_INFO=$(file "$IMAGE_PATH")
+
+    # Check if the image is a valid TGA file
+    if ! echo "$IMAGE_INFO" | grep -q "Targa image"; then
+        echo "Error: Splash image is not a valid TGA file"
+        exit 1
+    fi
+
     # Make sure image dimensions not too large
     regex="([0-9]+) x ([0-9]+) x ([0-9]+)"
 
@@ -72,8 +85,8 @@ if [ $DO_IMAGE_CHECKS -eq 1 ]; then
         height=${BASH_REMATCH[2]}
         depth=${BASH_REMATCH[3]}
         if [ $depth -ne $REQUIRED_DEPTH ]; then
-        echo "Error: Splash image must be $REQUIRED_DEPTH-bit, provided image is $depth bit"
-        exit 1
+            echo "Error: Splash image must be $REQUIRED_DEPTH-bit, provided image is $depth bit"
+            exit 1
         fi
         if [ $width -gt $MAX_WIDTH ] || [ $height -gt $MAX_HEIGHT ]; then
             echo "Splash image must be less than $MAX_WIDTH x $MAX_HEIGHT px"
@@ -84,6 +97,22 @@ if [ $DO_IMAGE_CHECKS -eq 1 ]; then
         echo "Could not determine image properties"
         echo "Warning: Continuing anyway, please check image is correct format:"
         echo "Image format must be TGA, ${REQUIRED_DEPTH}-bit, dimensions < ${MAX_WIDTH}x${MAX_HEIGHT}px"
+    fi
+
+    # Make sure the image does not exceed the firmware's palette limit.
+    # Needs ImageMagick's identify; if absent we can only warn.
+    if command -v identify >/dev/null 2>&1; then
+        colours=$(identify -format "%k" "$IMAGE_PATH" 2>/dev/null || true)
+        if [[ $colours =~ ^[0-9]+$ ]]; then
+            if [ "$colours" -gt "$MAX_COLOURS" ]; then
+                echo "Error: Splash image has $colours colours, must be no more than $MAX_COLOURS"
+                exit 1
+            fi
+        else
+            echo "Warning: could not determine colour count, continuing anyway"
+        fi
+    else
+        echo "Warning: 'identify' (ImageMagick) not found, skipping colour-count check"
     fi
 else
     echo "Warning: skipping image checks"
@@ -113,17 +142,24 @@ if [ $DO_CMDLINE_UPDATE -eq 1 ]; then
     # Remove entries that will conflict with fullscreen splash
     echo "Altering $CMDLINE_FILENAME to enable splash screen"
 
-    # Back up the original first - the rewrite below is destructive
-    cp "$CMDLINE_FILENAME" "${CMDLINE_FILENAME}.bak"
+    # Back up the original first - the rewrite below is destructive.
+    # Don't clobber an existing backup: a re-run must not overwrite the
+    # pristine copy with an already-modified cmdline.txt.
+    if [ ! -e "${CMDLINE_FILENAME}.bak" ]; then
+        cp "$CMDLINE_FILENAME" "${CMDLINE_FILENAME}.bak"
+    fi
 
-    sed -i "s/\bconsole=tty1\b//" "$CMDLINE_FILENAME"
-    sed -i "s/\bplymouth.ignore-serial-consoles\b//" "$CMDLINE_FILENAME"
-    sed -i "s/\bquiet\b//" "$CMDLINE_FILENAME"
-
-    # cmdline.txt is meant to be a single line, but tolerate files that
-    # contain newlines (multi-line or CRLF): collapse them to spaces rather
-    # than deleting them, otherwise adjacent parameters get glued together.
+    # Read cmdline.txt and do all edits in memory, writing once at the end so
+    # the file is never left half-modified. It is meant to be a single line,
+    # but tolerate newlines (multi-line or CRLF): collapse them to spaces
+    # rather than deleting them, else adjacent parameters get glued together.
     CMDLINE="$(tr '\r\n' '  ' < "$CMDLINE_FILENAME")"
+
+    # Remove entries that conflict with the fullscreen splash
+    CMDLINE="$(echo "$CMDLINE" | sed -E \
+        -e 's/\bconsole=tty1\b//' \
+        -e 's/\bplymouth\.ignore-serial-consoles\b//' \
+        -e 's/\bquiet\b//')"
 
     # Remove any existing versions of our params (with any value)
     for p in "${NEW_PARAMS[@]}"; do
