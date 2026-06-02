@@ -1,3 +1,13 @@
+rpi-splash-screen-support (1.0.2) stable; urgency=medium
+
+  * Fix cmdline.txt corruption when the file contains newlines or CRLF
+    line endings; collapse newlines to spaces instead of deleting them,
+    which previously glued kernel parameters into one invalid token
+  * Back up cmdline.txt to cmdline.txt.bak before modifying
+  * Quote the cmdline.txt filename throughout
+
+ -- Tom Dewey <tom.dewey@raspberrypi.com>  Tue, 02 Jun 2026 16:12:10 +0100
+
 rpi-splash-screen-support (1.0.1) stable; urgency=low
 
   * Corrects more cmdline.txt options
