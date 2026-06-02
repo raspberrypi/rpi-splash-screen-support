@@ -113,11 +113,17 @@ if [ $DO_CMDLINE_UPDATE -eq 1 ]; then
     # Remove entries that will conflict with fullscreen splash
     echo "Altering $CMDLINE_FILENAME to enable splash screen"
 
-    sed -i "s/\bconsole=tty1\b//" $CMDLINE_FILENAME
-    sed -i "s/\bplymouth.ignore-serial-consoles\b//" $CMDLINE_FILENAME
-    sed -i "s/\bquiet\b//" $CMDLINE_FILENAME
+    # Back up the original first - the rewrite below is destructive
+    cp "$CMDLINE_FILENAME" "${CMDLINE_FILENAME}.bak"
 
-    CMDLINE="$(tr -d '\n' < $CMDLINE_FILENAME)"
+    sed -i "s/\bconsole=tty1\b//" "$CMDLINE_FILENAME"
+    sed -i "s/\bplymouth.ignore-serial-consoles\b//" "$CMDLINE_FILENAME"
+    sed -i "s/\bquiet\b//" "$CMDLINE_FILENAME"
+
+    # cmdline.txt is meant to be a single line, but tolerate files that
+    # contain newlines (multi-line or CRLF): collapse them to spaces rather
+    # than deleting them, otherwise adjacent parameters get glued together.
+    CMDLINE="$(tr '\r\n' '  ' < "$CMDLINE_FILENAME")"
 
     # Remove any existing versions of our params (with any value)
     for p in "${NEW_PARAMS[@]}"; do
@@ -134,8 +140,8 @@ if [ $DO_CMDLINE_UPDATE -eq 1 ]; then
     done
 
     # Ensure it's still a single line
-    echo "$CMDLINE" | tr -d '\n' > $CMDLINE_FILENAME
-    echo "Updated $CMDLINE_FILENAME"
+    printf '%s\n' "$CMDLINE" > "$CMDLINE_FILENAME"
+    echo "Updated $CMDLINE_FILENAME (original saved as ${CMDLINE_FILENAME}.bak)"
 else
     echo "Not updating $CMDLINE_FILENAME"
     echo "To enable the splash screen, you must manually add the following entries to $CMDLINE_FILENAME:"
