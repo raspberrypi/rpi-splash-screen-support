@@ -15,7 +15,7 @@ DO_CMDLINE_UPDATE=1
 usage() {
     echo "Usage: $0 <splash-image> [options]"
     echo "Use this tool to set up fullscreen splash screen on Raspberry Pi OS"
-    echo "The splash image must be a ${REQUIRED_DEPTH}-bit TGA file, smaller than ${MAX_WIDTH}x${MAX_HEIGHT}px"
+    echo "The splash image must be a ${REQUIRED_DEPTH}-bit TGA file, ${MAX_WIDTH}x${MAX_HEIGHT}px or smaller"
     echo "The image must also have at most ${MAX_COLOURS} colours"
     echo "This tool will alter cmdline.txt and initramfs to enable the splash screen"
     echo "Options:"
