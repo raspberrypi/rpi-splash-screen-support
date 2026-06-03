@@ -8,8 +8,8 @@ Homepage: https://www.raspberrypi.com/software
 
 Package: rpi-splash-screen-support
 Architecture: all
-Depends: ${misc:Depends}, sed (>= 4.9), bash (>= 5.2)
-Recommends:
+Depends: ${misc:Depends}, initramfs-tools, file, sed, bash
+Suggests: imagemagick
 Description: Raspberry Pi Splash Screen Support
  Tool to configure & setup the fullscreen splash screen for Raspberry Pi OS
  This package provides hooks and utilities to set up a boot-time splash
