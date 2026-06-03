@@ -89,7 +89,7 @@ if [ $DO_IMAGE_CHECKS -eq 1 ]; then
             exit 1
         fi
         if [ $width -gt $MAX_WIDTH ] || [ $height -gt $MAX_HEIGHT ]; then
-            echo "Splash image must be less than $MAX_WIDTH x $MAX_HEIGHT px"
+            echo "Splash image must be $MAX_WIDTH x $MAX_HEIGHT px or smaller"
             echo "Provided image is $width x $height"
             exit 1
         fi
