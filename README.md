@@ -2,7 +2,7 @@
 
 This package provides a tool to configure and setup the fullscreen splash screen for Raspberry Pi OS.
 
-This splash image is drawn early in the boot process. This tool will configure the kernel to show a fullscreen splash image at boot time, instead of the defualt four raspberries.
+This splash image is drawn early in the boot process. This tool will configure the kernel to show a fullscreen splash image at boot time, instead of the default four raspberries.
 
 Upon operation, the only thing that should be drawn to the display will be the splash image, followed by whatever application overwrites it next (e.g. desktop, login console, etc).
 
