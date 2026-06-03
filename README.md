@@ -9,7 +9,7 @@ Upon operation, the only thing that should be drawn to the display will be the s
 ## Requirements
 
 - A 24-bit TGA image
-- Image dimensions smaller than 1920x1080px
+- Image dimensions of 1920x1080px or smaller
 - Image must contain fewer than 224 colours
 
 An example command to generate an image from a PNG file, to meet the requirements is given below.
